@@ -1,0 +1,960 @@
+AfterLogin fxml
+
+Hello fxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<?import javafx.scene.control.PasswordField?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.demo1.HelloController">
+   <right>
+      <AnchorPane prefHeight="500.0" prefWidth="415.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+         <children>
+            <Label layoutX="42.0" layoutY="220.0" text="Username :">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <Label layoutX="42.0" layoutY="262.0" text="Password :">
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </Label>
+            <TextField fx:id="username" layoutX="121.0" layoutY="217.0" prefHeight="0.0" prefWidth="150.0" promptText="User name" />
+            <PasswordField fx:id="password" layoutX="121.0" layoutY="260.0" prefHeight="7.0" prefWidth="150.0" promptText="Password" />
+            <Text layoutX="111.0" layoutY="104.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Login" wrappingWidth="170.9135971069336">
+               <font>
+                  <Font size="30.0" />
+               </font>
+            </Text>
+            <Label fx:id="wrongLogin" layoutX="155.0" layoutY="164.0" />
+            <Button fx:id="loginButton" layoutX="170.0" layoutY="322.0" mnemonicParsing="false" onAction="#userLogin" style="-fx-background-color: #0598ff;" text="Login" />
+         </children>
+      </AnchorPane>
+   </right>
+   <center>
+      <AnchorPane prefHeight="500.0" prefWidth="296.0" style="-fx-background-color: #0598ff;" BorderPane.alignment="CENTER">
+         <children>
+            <TextField layoutX="64.0" layoutY="163.0" prefHeight="25.0" prefWidth="146.0" style="-fx-background-color: transparent; -fx-border-color: white;" text="Weather">
+               <font>
+                  <Font size="27.0" />
+               </font>
+            </TextField>
+            <TextField layoutX="179.0" layoutY="223.0" prefHeight="30.0" prefWidth="92.0" style="-fx-background-color: transparent; -fx-border-color: white;" text="App">
+               <font>
+                  <Font size="28.0" />
+               </font>
+            </TextField>
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>
+
+After Login fxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+
+            fx:controller="com.example.demo1.AfterLoginController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #808080;">
+    <children>
+        <HBox layoutX="70.0" layoutY="42.0" spacing="20.0">
+            <children>
+                <Label text="Location:" />
+                <TextField fx:id="locationField" promptText="Enter city name" style="-fx-border-width: 0px 0px 2px 0px;" />
+            </children>
+        </HBox>
+        <HBox layoutX="70.0" layoutY="107.0" spacing="20.0">
+            <children>
+                <Label text="From Date:" />
+                <DatePicker fx:id="fromDate" promptText="YYYY/MM/DD" />
+            </children>
+        </HBox>
+        <HBox layoutX="70.0" layoutY="172.0" spacing="20.0">
+            <children>
+                <Label text="To Date:" />
+                <DatePicker fx:id="toDate" promptText="YYYY/MM/DD" />
+            </children>
+        </HBox>
+        <Button fx:id="confirmButton" onAction="#confirmAction" text="Confirm" />
+    </children>
+</AnchorPane>
+</BorderPane>
+
+HelloController
+
+package com.example.demo1;
+
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.*;
+
+public class HelloController {
+
+    @FXML
+    private TextField username;
+
+    @FXML
+    private PasswordField password;
+
+    @FXML
+    private Button loginButton;
+
+    @FXML
+    private BorderPane rootPane;
+
+    @FXML
+    protected void userLogin() {
+        // Get username and password from text fields
+        String enteredUsername = username.getText();
+        String enteredPassword = password.getText();
+
+        // JDBC connection
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/weather", "root", "leyparts");
+
+            // SQL query to check username and password
+            String sql = "SELECT * FROM user_data WHERE username = ? AND password = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, enteredUsername);
+                preparedStatement.setString(2, enteredPassword);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        // Load AfterLogin.fxml on successful login
+                        loadAfterLoginView();
+                    } else {
+                        Platform.runLater(() -> showAlert("Login Failed", "Invalid username or password."));
+                    }
+                }
+            }
+
+            connection.close(); // Close the connection when done
+        } catch (SQLException e) {
+            Platform.runLater(() -> {
+                showAlert("Error", "Error connecting to the database. Check database server and credentials.\n" + e.getMessage());
+                e.printStackTrace();
+            });
+        }
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void loadAfterLoginView() {
+        try {
+            FXMLLoader fxmlLoader =new FXMLLoader(getClass().getResource("/com/example/demo1/AfterLogin.fxml"));
+            BorderPane afterLoginPane = fxmlLoader.load();
+            Scene scene = new Scene(afterLoginPane, 800, 600);
+            Stage stage = (Stage) loginButton.getScene().getWindow(); // Get the current stage
+            stage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+AterLoginController
+
+package com.example.demo1;
+
+package com.example.demo1;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextField;
+
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+public class AfterLoginController {
+
+    @FXML
+    private Button LoginButton;
+    @FXML
+    private TextField locationField;
+
+    @FXML
+    private DatePicker fromDate;
+
+    @FXML
+    private DatePicker toDate;
+
+    @FXML
+    private Button confirmButton;
+
+    @FXML
+    public void confirmAction() {
+        // Get input values
+
+        String cityName = locationField.getText();
+        String startDate = fromDate.getValue().toString();
+        String endDate = toDate.getValue().toString();
+
+        // JDBC connection and query
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/weather", "root", "leyparts");
+
+            Map<String, String> cityTableMap = new HashMap<>();
+            cityTableMap.put("Chennai", "chennai_weather");
+            cityTableMap.put("Coimbatore", "coimbatore_weather");
+            cityTableMap.put("Coimbatore", "coimbatore_weather");
+            cityTableMap.put("Erode", "erode_weather");
+            cityTableMap.put("Tiruppur", "tiruppur_weather");
+            cityTableMap.put("Madurai", "madurai_weather");
+            // Add entries for other cities
+
+            // Get the table name for the given city
+            String tableName = cityTableMap.get(cityName);
+
+            if (tableName != null) {
+                String sql = "SELECT * FROM " + tableName + " WHERE Name = ? AND date BETWEEN ? AND ?";
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, cityName);
+                    preparedStatement.setDate(2, Date.valueOf(startDate));
+                    preparedStatement.setDate(3, Date.valueOf(endDate));
+
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        // You can now iterate through the ResultSet and do something with the data
+                        while (resultSet.next()) {
+                            // Retrieve data from the ResultSet
+                            String resultCity = resultSet.getString("Name");
+                            String resultDate = resultSet.getString("Date");
+                            String resultTemperature = resultSet.getString("Temperature");
+                            String resultHumidity = resultSet.getString("Humidity");
+
+                            // ...
+
+                            // Perform actions with the retrieved data
+                            System.out.println("City: " + resultCity + ", Date: " + resultDate + ", Temperature: " +resultTemperature + ", Humidity: " + resultHumidity );
+                        }
+                    }
+                }
+            } else {
+                // Handle the case where the city name is not recognized
+                System.out.println("City not recognized: " + cityName);
+            }
+
+
+            connection.close(); // Close the connection when done
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+HelloApplication
+
+package com.example.demo1;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+
+public class HelloApplication extends Application {
+    @Override
+    public void start(Stage stage) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+        stage.setTitle("Hello!");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public static void main(String[] args) {
+        launch();
+    }
+}
+
+Login
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Login {
+
+    public static void main(String[] args) {
+        // JDBC URL, username, and password of MySQL server
+        String url = "jdbc:mysql://localhost:3306/weather";
+        String dbUser = "root";
+        String dbPassword = "leyparts";
+
+        // User input for login credentials
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        // JDBC connection
+        try (Connection connection = DriverManager.getConnection(url, dbUser, dbPassword)) {
+            // SQL query to check username and password
+            String sql = "SELECT * FROM user_data WHERE username = ? AND password = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, password);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        System.out.println("Login successful!");
+                    } else {
+                        System.out.println("Invalid username or password.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+ResultPageController
+
+package com.example.demo1;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+import java.util.Date;
+import java.util.List;
+
+public class ResultPageController {
+
+    @FXML
+    private TableView<ResultData> resultTable;
+
+    @FXML
+    private TableColumn<ResultData, String> nameColumn;
+
+    @FXML
+    private TableColumn<ResultData, Date> dateColumn;
+
+    @FXML
+    private TableColumn<ResultData, Double> temperatureColumn;
+
+    @FXML
+    private TableColumn<ResultData, Double> humidityColumn;
+
+    // Add more TableColumn fields as needed
+
+    @FXML
+    public void initialize() {
+        // Initialize your table columns
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+        temperatureColumn.setCellValueFactory(new PropertyValueFactory<>("temperature"));
+        humidityColumn.setCellValueFactory(new PropertyValueFactory<>("humidity"));
+        // Initialize more columns as needed
+    }
+
+    public void setData(List<ResultData> resultList) {
+        // Convert the list to an ObservableList (for use in TableView)
+        ObservableList<ResultData> observableList = FXCollections.observableArrayList(resultList);
+
+        // Populate the table with data
+        resultTable.setItems(observableList);
+    }
+
+
+    public static class ResultData {
+        private String name;
+        private Date date;
+        private Double temperature;
+        private Double humidity;
+
+        // Add a constructor to initialize the fields
+        public ResultData(String name, Date date, Double temperature, Double humidity) {
+            this.name = name;
+            this.date = date;
+            this.temperature = temperature;
+            this.humidity = humidity;
+        }
+
+        // Add getters (and setters if needed)
+        public String getName() {
+            return name;
+        }
+
+        public Date getDate() {
+            return date;
+        }
+
+        public Double getTemperature() {
+            return temperature;
+        }
+
+        public Double getHumidity() {
+            return humidity;
+        }
+    }
+}
+
+
+ResultPage fxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.TableRow?>
+<?import javafx.scene.control.Label?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.demo1.ResultPageController">
+    <children>
+        <TableView fx:id="resultTable" layoutX="25.0" layoutY="61.0" prefHeight="258.0" prefWidth="550.0">
+            <columns>
+                <TableColumn fx:id="nameColumn" prefWidth="75.0" text="Name" />
+                <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
+                <TableColumn fx:id="temperatureColumn" prefWidth="75.0" text="Temperature" />
+                <TableColumn fx:id="humidityColumn" prefWidth="75.0" text="Humidity" />
+            </columns>
+        </TableView>
+    </children>
+</AnchorPane>
+
+
+AfterLoginController 
+
+package com.example.demo1;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ResultPageController {
+
+    @FXML
+    private TableView<ResultData> resultTable;
+
+    @FXML
+    private TableColumn<ResultData, String> nameColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> dateColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> temperatureColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> humidityColumn;
+
+    // Add more TableColumn fields as needed
+
+    @FXML
+    public void initialize() {
+        // Initialize your table columns
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+        temperatureColumn.setCellValueFactory(new PropertyValueFactory<>("temperature"));
+        humidityColumn.setCellValueFactory(new PropertyValueFactory<>("humidity"));
+        // Initialize more columns as needed
+    }
+
+    public void initializeData(String cityName, String startDate, String endDate) {
+        // JDBC connection and query
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/weather", "root", "leyparts");
+
+            Map<String, String> cityTableMap = new HashMap<>();
+            cityTableMap.put("Chennai", "chennai_weather");
+            cityTableMap.put("Coimbatore", "coimbatore_weather");
+            cityTableMap.put("Erode", "erode_weather");
+            // Add entries for other cities
+
+            // Get the table name for the given city
+            String tableName = cityTableMap.get(cityName);
+
+            if (tableName != null) {
+                String sql = "SELECT * FROM " + tableName + " WHERE Name = ? AND date BETWEEN ? AND ?";
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, cityName);
+                    preparedStatement.setDate(2, Date.valueOf(startDate));
+                    preparedStatement.setDate(3, Date.valueOf(endDate));
+
+                    List<ResultData> resultList = new ArrayList<>();
+
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        // You can now iterate through the ResultSet and do something with the data
+                        while (resultSet.next()) {
+                            // Retrieve data from the ResultSet
+                            String resultCity = resultSet.getString("Name");
+                            String resultDate = resultSet.getString("Date");
+                            String resultTemperature = resultSet.getString("Temperature");
+                            String resultHumidity = resultSet.getString("Humidity");
+
+                            // Create ResultData object and add to the list
+                            ResultData resultData = new ResultData(resultCity, resultDate, resultTemperature, resultHumidity);
+                            resultList.add(resultData);
+                        }
+                    }
+
+                    // Set data to the table
+                    setData(resultList);
+                }
+            } else {
+                // Handle the case where the city name is not recognized
+                System.out.println("City not recognized: " + cityName);
+            }
+
+            connection.close(); // Close the connection when done
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setData(List<ResultData> resultList) {
+        // Convert the list to an ObservableList (for use in TableView)
+        ObservableList<ResultData> observableList = FXCollections.observableArrayList(resultList);
+
+        // Populate the table with data
+        resultTable.setItems(observableList);
+    }
+
+    public static class ResultData {
+        private String name;
+        private String date;
+        private String temperature;
+        private String humidity;
+
+        // Add a constructor to initialize the fields
+        public ResultData(String name, String date, String temperature, String humidity) {
+            this.name = name;
+            this.date = date;
+            this.temperature = temperature;
+            this.humidity = humidity;
+        }
+
+        // Add getters (and setters if needed)
+        public String getName() {
+            return name;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getTemperature() {
+            return temperature;
+        }
+
+        public String getHumidity() {
+            return humidity;
+        }
+    }
+}
+
+
+hello-view fxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<?import javafx.scene.control.PasswordField?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.demo1.HelloController">
+   <right>
+      <AnchorPane prefHeight="500.0" prefWidth="415.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+         <children>
+            <Label layoutX="42.0" layoutY="220.0" text="Username :">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <Label layoutX="42.0" layoutY="262.0" text="Password :">
+               <font>
+                  <Font size="15.0" />
+               </font>
+            </Label>
+            <TextField fx:id="username" layoutX="121.0" layoutY="217.0" prefHeight="0.0" prefWidth="150.0" promptText="User name" />
+            <PasswordField fx:id="password" layoutX="121.0" layoutY="260.0" prefHeight="7.0" prefWidth="150.0" promptText="Password" />
+            <Text layoutX="111.0" layoutY="104.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Login" wrappingWidth="170.9135971069336">
+               <font>
+                  <Font size="30.0" />
+               </font>
+            </Text>
+            <Label fx:id="wrongLogin" layoutX="155.0" layoutY="164.0" />
+            <Button fx:id="loginButton" layoutX="170.0" layoutY="322.0" mnemonicParsing="false" onAction="#userLogin" style="-fx-background-color: #0598ff;" text="Login" />
+         </children>
+      </AnchorPane>
+   </right>
+   <center>
+      <AnchorPane prefHeight="500.0" prefWidth="296.0" style="-fx-background-color: #0598ff;" BorderPane.alignment="CENTER">
+         <children>
+            <TextField layoutX="64.0" layoutY="163.0" prefHeight="25.0" prefWidth="146.0" style="-fx-background-color: transparent; -fx-border-color: white;" text="Weather">
+               <font>
+                  <Font size="27.0" />
+               </font>
+            </TextField>
+            <TextField layoutX="179.0" layoutY="223.0" prefHeight="30.0" prefWidth="92.0" style="-fx-background-color: transparent; -fx-border-color: white;" text="App">
+               <font>
+                  <Font size="28.0" />
+               </font>
+            </TextField>
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>
+
+
+Hello Controller
+
+package com.example.demo1;
+
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.*;
+
+public class HelloController {
+
+    @FXML
+    private TextField username;
+
+    @FXML
+    private PasswordField password;
+
+    @FXML
+    private Button loginButton;
+
+    @FXML
+    private BorderPane rootPane;
+    @FXML
+    protected void userLogin() {
+
+        System.out.println("Login Clicked");
+        // Get username and password from text fields
+        String enteredUsername = username.getText();
+        String enteredPassword = password.getText();
+
+        // JDBC connection
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/weather", "root", "leyparts");
+
+            // SQL query to check username and password
+            String sql = "SELECT * FROM user_data WHERE username = ? AND password = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, enteredUsername);
+                preparedStatement.setString(2, enteredPassword);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        // Load AfterLogin.fxml on successful login
+                        loadAfterLoginView();
+                    } else {
+                        Platform.runLater(() -> showAlert("Login Failed", "Invalid username or password."));
+                    }
+                }
+            }
+
+            connection.close(); // Close the connection when done
+        } catch (SQLException e) {
+            Platform.runLater(() -> {
+                showAlert("Error", "Error connecting to the database. Check database server and credentials.\n" + e.getMessage());
+                e.printStackTrace();
+            });
+        }
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void loadAfterLoginView() {
+        try {
+            FXMLLoader fxmlLoader =new FXMLLoader(getClass().getResource("/com/example/demo1/AfterLogin.fxml"));
+            BorderPane afterLoginPane = fxmlLoader.load();
+            Scene scene = new Scene(afterLoginPane, 800, 600);
+            Stage stage = (Stage) loginButton.getScene().getWindow(); // Get the current stage
+            stage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+ResultPageController
+
+package com.example.demo1;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ResultPageController {
+
+    @FXML
+    private TableView<ResultData> resultTable;
+
+    @FXML
+    private TableColumn<ResultData, String> nameColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> dateColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> temperatureColumn;
+
+    @FXML
+    private TableColumn<ResultData, String> humidityColumn;
+
+    // Add more TableColumn fields as needed
+
+    @FXML
+    public void initialize() {
+        // Initialize your table columns
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+        temperatureColumn.setCellValueFactory(new PropertyValueFactory<>("temperature"));
+        humidityColumn.setCellValueFactory(new PropertyValueFactory<>("humidity"));
+        // Initialize more columns as needed
+    }
+
+    public void initializeData(String cityName, String startDate, String endDate) {
+        // JDBC connection and query
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/weather", "root", "leyparts");
+
+            Map<String, String> cityTableMap = new HashMap<>();
+            cityTableMap.put("Chennai", "chennai_weather");
+            cityTableMap.put("Coimbatore", "coimbatore_weather");
+            cityTableMap.put("Erode", "erode_weather");
+            // Add entries for other cities
+
+            // Get the table name for the given city
+            String tableName = cityTableMap.get(cityName);
+
+            if (tableName != null) {
+                String sql = "SELECT * FROM " + tableName + " WHERE Name = ? AND date BETWEEN ? AND ?";
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, cityName);
+                    preparedStatement.setDate(2, Date.valueOf(startDate));
+                    preparedStatement.setDate(3, Date.valueOf(endDate));
+
+                    List<ResultData> resultList = new ArrayList<>();
+
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        // You can now iterate through the ResultSet and do something with the data
+                        while (resultSet.next()) {
+                            // Retrieve data from the ResultSet
+                            String resultCity = resultSet.getString("Name");
+                            String resultDate = resultSet.getString("Date");
+                            String resultTemperature = resultSet.getString("Temperature");
+                            String resultHumidity = resultSet.getString("Humidity");
+
+                            // Create ResultData object and add to the list
+                            ResultData resultData = new ResultData(resultCity, resultDate, resultTemperature, resultHumidity);
+                            resultList.add(resultData);
+                        }
+                    }
+
+                    // Set data to the table
+                    setData(resultList);
+                }
+            } else {
+                // Handle the case where the city name is not recognized
+                System.out.println("City not recognized: " + cityName);
+            }
+
+            connection.close(); // Close the connection when done
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setData(List<ResultData> resultList) {
+        // Convert the list to an ObservableList (for use in TableView)
+        ObservableList<ResultData> observableList = FXCollections.observableArrayList(resultList);
+
+        // Populate the table with data
+        resultTable.setItems(observableList);
+    }
+
+    public static class ResultData {
+        private String name;
+        private String date;
+        private String temperature;
+        private String humidity;
+
+        // Add a constructor to initialize the fields
+        public ResultData(String name, String date, String temperature, String humidity) {
+            this.name = name;
+            this.date = date;
+            this.temperature = temperature;
+            this.humidity = humidity;
+        }
+
+        // Add getters (and setters if needed)
+        public String getName() {
+            return name;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getTemperature() {
+            return temperature;
+        }
+
+        public String getHumidity() {
+            return humidity;
+        }
+    }
+}
+
+
+Login
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class Login {
+
+    public static void main(String[] args) {
+        // JDBC URL, username, and password of MySQL server
+        String url = "jdbc:mysql://localhost:3306/weather";
+        String dbUser = "root";
+        String dbPassword = "leyparts";
+
+        // User input for login credentials
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        // JDBC connection
+        try (Connection connection = DriverManager.getConnection(url, dbUser, dbPassword)) {
+            // SQL query to check username and password
+            String sql = "SELECT * FROM user_data WHERE username = ? AND password = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, password);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        System.out.println("Login successful!");
+                    } else {
+                        System.out.println("Invalid username or password.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+HelloApplication
+
+package com.example.demo1;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+
+public class HelloApplication extends Application {
+    @Override
+    public void start(Stage stage) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+        stage.setTitle("Hello!");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public static void main(String[] args) {
+        launch();
+    }
+}
